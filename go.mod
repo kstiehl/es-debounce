@@ -2,7 +2,13 @@ module github.com/kstiehl/debounce-indexer
 
 go 1.19
 
-require github.com/spf13/cobra v1.5.0
+require (
+	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/stdr v1.2.2
+	github.com/julienschmidt/httprouter v1.3.0
+	github.com/spf13/cobra v1.5.0
+	k8s.io/klog v1.0.0
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
