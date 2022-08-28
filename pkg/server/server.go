@@ -8,9 +8,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-
 // And Option which can be applied to Options.
-type Option = func (option *Options)
+type Option = func(option *Options)
 
 type Options struct {
 	ListenAddress string
@@ -40,7 +39,6 @@ func RunServer(ctx context.Context, options ...Option) error {
 
 	return nil
 }
-
 
 func assembleRouter() *httprouter.Router {
 	router := httprouter.New()
