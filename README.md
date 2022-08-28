@@ -1,4 +1,4 @@
-# es-debounce
+# index-bouncer
 
 A go server that accepts elasticsearch index requests from many clients and converts them to bulk index requests.
 

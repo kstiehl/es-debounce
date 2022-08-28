@@ -1,4 +1,4 @@
-module github.com/kstiehl/debounce-indexer
+module github.com/kstiehl/index-bouncer
 
 go 1.19
 
@@ -7,7 +7,6 @@ require (
 	github.com/go-logr/stdr v1.2.2
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/spf13/cobra v1.5.0
-	k8s.io/klog v1.0.0
 )
 
 require (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kstiehl/debounce-indexer/cmd"
+	"github.com/kstiehl/index-bouncer/cmd"
 	"github.com/spf13/cobra"
 )
 

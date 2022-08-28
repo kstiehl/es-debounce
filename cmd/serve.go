@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/stdr"
-	"github.com/kstiehl/debounce-indexer/pkg/server"
+	"github.com/kstiehl/index-bouncer/pkg/server"
 	"github.com/spf13/cobra"
 )
 
