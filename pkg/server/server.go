@@ -35,7 +35,7 @@ func RunServer(ctx context.Context, options ...Option) error {
 	serverOptions.InitWithDefaults()
 	serverOptions.ApplyOptions(options)
 
-	log.Info("starting server")
+	log.WithValues("listenAddress", serverOptions.ListenAddress).Info("starting server")
 	http.ListenAndServe(serverOptions.ListenAddress, assembleRouter())
 
 	return nil
