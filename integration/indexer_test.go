@@ -3,6 +3,7 @@ package integration_test
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -54,8 +55,7 @@ var _ = Describe("Indexer", Ordered, func() {
 		elasticContainer.Terminate(context.Background())
 	})
 
-	It("this and that", func() {
-
+	It("That indexing works", func() {
 		req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://%s:9200/index/_doc/test", elasticIP), strings.NewReader(`{"foo": "bar"}`))
 		req.Header.Add("Content-Type", "application/json")
 
@@ -66,5 +66,21 @@ var _ = Describe("Indexer", Ordered, func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.StatusCode).To(BeEquivalentTo(http.StatusCreated))
+
+		req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("https://%s:9200/index/_source/test", elasticIP), nil)
+		Expect(err).ToNot(HaveOccurred())
+
+		req.SetBasicAuth("elastic", esPassword)
+
+		resp, err = client.Do(req)
+		Expect(err).ToNot(HaveOccurred())
+		defer resp.Body.Close()
+		
+		var responseBody map[string]string
+		err = json.NewDecoder(resp.Body).Decode(&responseBody)
+		Expect(err).ToNot(HaveOccurred())
+		
+		Expect("bar").To(BeEquivalentTo(responseBody["foo"]))
+
 	})
 })
