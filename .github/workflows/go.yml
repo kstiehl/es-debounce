@@ -21,4 +21,14 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v -coverprofile cover.out -covermode atomic ./...
+
+    - name: upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: cover.out
+        name: index-bouncer
+        fail_ci_if_error: true
+        verbose: true
+
