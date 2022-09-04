@@ -75,11 +75,11 @@ var _ = Describe("Indexer", Ordered, func() {
 		resp, err = client.Do(req)
 		Expect(err).ToNot(HaveOccurred())
 		defer resp.Body.Close()
-		
+
 		var responseBody map[string]string
 		err = json.NewDecoder(resp.Body).Decode(&responseBody)
 		Expect(err).ToNot(HaveOccurred())
-		
+
 		Expect("bar").To(BeEquivalentTo(responseBody["foo"]))
 
 	})
