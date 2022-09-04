@@ -17,8 +17,8 @@ type Client struct {
 	esClient *elasticsearch.Client
 }
 
-// NewWithClient creates a Client based on the given http.Client.
-func NewWithClient() (Client, error) {
+// NewWithDefaultClient creates a Client based on the given http.Client.
+func NewWithDefaultClient() (Client, error) {
 	client, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		return Client{}, err

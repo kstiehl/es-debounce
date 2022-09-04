@@ -49,6 +49,19 @@ func TestElasticSearch(t *testing.T) {
 		)
 		fmt.Print(b)
 	})
+
+	t.Run("Test Broken Data", func(t *testing.T) {
+		t.Parallel()
+
+		brokenDoc := testingDoc
+		brokenDoc.data = map[string]interface{}{
+			"testing": func() {},
+		}
+
+		_, err := Bulk([]Document{brokenDoc}).MarshalJSONToBuffer()
+
+		assert.Error(t, err)
+	})
 }
 
 type testingDoc struct {
