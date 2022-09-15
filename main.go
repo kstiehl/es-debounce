@@ -1,3 +1,5 @@
+//go:generate ./scripts/generate.sh
+
 package main
 
 import (
