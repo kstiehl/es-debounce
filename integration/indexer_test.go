@@ -15,18 +15,17 @@ import (
 )
 
 var _ = Describe("Indexer", Ordered, func() {
-	const esPassword = "jrjgkrejgkrejgkjredswjr8594839uwe09"
-	var elasticContainer testcontainers.Container
-	var elasticIP string
+	var openSearchContainer testcontainers.Container
+	var openSearchIP string
 	var client *http.Client
 
 	BeforeAll(func() {
 		req := testcontainers.ContainerRequest{
-			Image: "docker.elastic.co/elasticsearch/elasticsearch:8.4.0",
+			Image: "opensearchproject/opensearch:2.3.0",
 			Env: map[string]string{
-				"ELASTIC_PASSWORD": esPassword,
+				"discovery.type": "single-node",
 			},
-			WaitingFor:   wait.ForLog("Cluster health status changed from [YELLOW] to [GREEN]"),
+			WaitingFor:   wait.ForLog(".opendistro_security is used as internal security index."),
 			ExposedPorts: []string{"9200/tcp"},
 		}
 
@@ -41,8 +40,8 @@ var _ = Describe("Indexer", Ordered, func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(ip).ToNot(BeEmpty())
-		elasticContainer = container
-		elasticIP = ip
+		openSearchContainer = container
+		openSearchIP = ip
 
 		client = &http.Client{
 			Transport: &http.Transport{
@@ -52,25 +51,29 @@ var _ = Describe("Indexer", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		elasticContainer.Terminate(context.Background())
+		openSearchContainer.Terminate(context.Background())
 	})
 
 	It("That indexing works", func() {
-		req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://%s:9200/index/_doc/test", elasticIP), strings.NewReader(`{"foo": "bar"}`))
+		req, err := http.NewRequest(
+			http.MethodPut,
+			fmt.Sprintf("https://%s:9200/index/_doc/test", openSearchIP),
+			strings.NewReader(`{"foo": "bar"}`),
+		)
 		req.Header.Add("Content-Type", "application/json")
 
 		Expect(err).ToNot(HaveOccurred())
 
-		req.SetBasicAuth("elastic", esPassword)
+		req.SetBasicAuth("admin", "admin")
 		resp, err := client.Do(req)
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.StatusCode).To(BeEquivalentTo(http.StatusCreated))
 
-		req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("https://%s:9200/index/_source/test", elasticIP), nil)
+		req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("https://%s:9200/index/_source/test", openSearchIP), nil)
 		Expect(err).ToNot(HaveOccurred())
 
-		req.SetBasicAuth("elastic", esPassword)
+		req.SetBasicAuth("admin", "admin")
 
 		resp, err = client.Do(req)
 		Expect(err).ToNot(HaveOccurred())
@@ -81,6 +84,5 @@ var _ = Describe("Indexer", Ordered, func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect("bar").To(BeEquivalentTo(responseBody["foo"]))
-
 	})
 })
