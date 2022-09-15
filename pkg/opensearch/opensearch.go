@@ -1,4 +1,4 @@
-package elastic
+package opensearch
 
 import (
 	"bytes"
@@ -7,24 +7,24 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/opensearch-project/opensearch-go"
 )
 
 var ErrOptNoAddress = errors.New("no address was specified")
 
-// Client is the way to communicate with a configured elasticsearch.
+// Client is the way to communicate with a configured opensearch.
 type Client struct {
-	esClient *elasticsearch.Client
+	opensearchClient *opensearch.Client
 }
 
 // NewWithDefaultClient creates a Client based on the given http.Client.
 func NewWithDefaultClient() (Client, error) {
-	client, err := elasticsearch.NewDefaultClient()
+	client, err := opensearch.NewDefaultClient()
 	if err != nil {
 		return Client{}, err
 	}
 	return Client{
-		esClient: client,
+		opensearchClient: client,
 	}, nil
 }
 
@@ -40,7 +40,7 @@ type Document interface {
 	Data() interface{}
 }
 
-// BulkIndex send multiple docuemnts to elasticsearch
+// BulkIndex send multiple docuemnts to opensearch
 func (client Client) BulkIndex(ctx context.Context, docs []Document) error {
 	dataBytes, err := Bulk(docs).MarshalJSONToBuffer()
 	if err != nil {
@@ -48,9 +48,9 @@ func (client Client) BulkIndex(ctx context.Context, docs []Document) error {
 	}
 
 	// TODO: check response
-	_, err = client.esClient.Bulk(dataBytes)
+	_, err = client.opensearchClient.Bulk(dataBytes)
 	if err != nil {
-		return fmt.Errorf("error during bulk index request to elasticsearch")
+		return fmt.Errorf("error during bulk index request to opensearch")
 	}
 
 	return nil

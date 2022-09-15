@@ -1,4 +1,4 @@
-package elastic
+package opensearch
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestElasticSearch(t *testing.T) {
+func TestOpenSearch(t *testing.T) {
 	t.Parallel()
 
 	testingDoc := testingDoc{
