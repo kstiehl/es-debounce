@@ -67,17 +67,30 @@ func RunServer(ctx context.Context, options ...Option) error {
 	}
 	pb.RegisterRecordingServiceServer(gServer, &recordingService)
 
-	listen, err := net.Listen("tcp", serverOptions.ListenAddress)
+	listen, err := getServerListen(serverOptions)
 	if err != nil {
-		log.Error(err, "couldn't create listen", "port", serverOptions.ListenAddress)
+		log.Error(err, "unbale to to listen", "listenAddr", listen.Addr().String())
+		return err
 	}
 
-	log.Info("server listening on", "port", serverOptions.ListenAddress)
+	log.Info("server listening", "listenAddr", listen.Addr().String())
 
 	if err := gServer.Serve(listen); err != nil {
 		log.Error(err, "error when listening", "port", serverOptions.ListenAddress)
 	}
 	return nil
+}
+
+func getServerListen(options Options) (net.Listener, error) {
+	if options.Listen != nil {
+		return options.Listen, nil
+	}
+
+	listen, err := net.Listen("tcp", options.ListenAddress)
+	if err != nil {
+		return nil, err
+	}
+	return listen, nil
 }
 
 func assembleRouter() *httprouter.Router {

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"net"
 	"testing"
 
 	"github.com/kstiehl/index-bouncer/pkg/grpc/pb"
@@ -45,7 +46,10 @@ func TestServer(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	go RunServer(ctx, WithListenAddress(":8080"))
+	listener, err := net.Listen("tcp", ":8080")
+	assert.NoError(t, err)
+
+	go RunServer(ctx, WithListen(listener))
 	t.Run("RecordEvent", func(t *testing.T) {
 		con, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
 		assert.NoError(t, err)
