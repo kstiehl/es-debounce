@@ -20,6 +20,13 @@ jobs:
     - name: Build
       run: go build -v ./...
 
+    - name: Install GRPC
+      run: |
+        sudo apt-get install -y protobuf-compiler
+        go install google.golang.org/protobuf/cmd/protoc-gen-go
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+
     - name: Test
       run: go test -v -coverprofile cover.out -covermode atomic ./...
 
