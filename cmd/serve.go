@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/stdr"
-	"github.com/kstiehl/index-bouncer/pkg/server"
+	"github.com/kstiehl/index-bouncer/pkg/grpc"
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +18,7 @@ func ServeCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := logr.NewContext(context.Background(),
 				stdr.New(log.New(os.Stdout, "", log.LstdFlags)))
-			return server.RunServer(ctx)
+			return grpc.RunServer(ctx)
 		},
 	}
-
 }

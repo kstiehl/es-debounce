@@ -16,18 +16,31 @@ type Option = func(option *Options)
 
 // WithListenAddress the default listening address.
 func WithListenAddress(listen string) Option {
-	return func(option *Options) {
-		option.ListenAddress = listen
+	return func(options *Options) {
+		options.ListenAddress = listen
+	}
+}
+
+// WithListen allow to directly configure a net.Listen for the server.
+func WithListen(listener net.Listener) Option {
+	return func(options *Options) {
+		options.Listen = listener
 	}
 }
 
 type Options struct {
+	// Listen can be given to directly configure the port the grpc server is listening on.
+	Listen net.Listener
+
+	// ListenAddress can be used to configure a ListenAddress which is for the grpc server.
+	// This will be ignored when Options.Listen is set.
 	ListenAddress string
 }
 
 // InitDefaults initialises Options with default values for each setting.
 func (o *Options) InitWithDefaults() {
 	o.ListenAddress = ":8080"
+	o.Listen = nil
 }
 
 // ApplyOptions iterates over []Option and applies every single one of them.
@@ -37,6 +50,7 @@ func (o *Options) ApplyOptions(options []Option) {
 	}
 }
 
+// RunServer runs the server and block the goroutine.
 func RunServer(ctx context.Context, options ...Option) error {
 	log := logr.FromContextOrDiscard(ctx)
 
