@@ -1,11 +1,14 @@
-package server
+package grpc
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"github.com/go-logr/logr"
 	"github.com/julienschmidt/httprouter"
+	"github.com/kstiehl/index-bouncer/pkg/server/pb"
+	"google.golang.org/grpc"
 )
 
 // And Option which can be applied to Options.
@@ -34,9 +37,18 @@ func RunServer(ctx context.Context, options ...Option) error {
 	serverOptions.InitWithDefaults()
 	serverOptions.ApplyOptions(options)
 
-	log.WithValues("listenAddress", serverOptions.ListenAddress).Info("starting server")
-	http.ListenAndServe(serverOptions.ListenAddress, assembleRouter())
+	gServer := grpc.NewServer()
+	pb.RegisterRecordingServiceServer(gServer, nil)
 
+	listen, err := net.Listen("tcp", serverOptions.ListenAddress)
+	if err != nil {
+		log.Error(err, "couldn't create listen", "port", serverOptions.ListenAddress)
+	}
+	log.Info("server listening on", "port", serverOptions.ListenAddress)
+
+	if err := gServer.Serve(listen); err != nil {
+		log.Error(err, "error when listening", "port", serverOptions.ListenAddress)
+	}
 	return nil
 }
 

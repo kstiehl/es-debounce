@@ -1,31 +1,23 @@
 syntax = "proto3";
 
-option go_package = "pkg/server/pb";
+option go_package = "pkg/grpc/pb";
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
-  // Sends another greeting
-  rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
+
+message RecordEventRequest {
+	string eventID = 1;
+	string objectID = 2;
+	string data = 3;
 }
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+
+enum RecordResponseCode {
+	RECORD_OK = 0;
 }
 
-// The response message containing the greetings
-message HelloReply {
-  string message = 1;
+message RecordEventResponse {
+	RecordResponseCode code = 1;
 }
 
-message Empty {}
-
-message PingResponse {
-  string message = 1;
-}
-
-service Ping {
-  rpc Ping (Empty) returns (PingResponse) {}
+service RecordingService {
+	rpc RecordEvent(RecordEventRequest) returns (RecordEventResponse) {}
 }

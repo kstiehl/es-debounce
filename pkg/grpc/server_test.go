@@ -1,4 +1,4 @@
-package server
+package grpc
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 )
 
 func TestOptions(t *testing.T) {
-
 	t.Parallel()
 
 	t.Run("ApplyOptions", func(t *testing.T) {
@@ -36,6 +35,5 @@ func TestOptions(t *testing.T) {
 
 		// verify
 		assert.Equal(t, ":8080", options.ListenAddress)
-
 	})
 }
