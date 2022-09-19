@@ -1,9 +1,12 @@
 package grpc
 
 import (
+	"context"
 	"testing"
 
+	"github.com/kstiehl/index-bouncer/pkg/grpc/pb"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func TestOptions(t *testing.T) {
@@ -35,5 +38,23 @@ func TestOptions(t *testing.T) {
 
 		// verify
 		assert.Equal(t, ":8080", options.ListenAddress)
+	})
+}
+
+func TestServer(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	go RunServer(ctx, WithListenAddress(":8080"))
+	t.Run("RecordEvent", func(t *testing.T) {
+		con, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+		assert.NoError(t, err)
+		defer con.Close()
+		client := pb.NewRecordingServiceClient(con)
+
+		resp, err := client.RecordEvent(ctx, &pb.RecordEventRequest{EventID: "testID", ObjectID: "ObjectID", Data: "test"})
+		assert.NoError(t, err)
+
+		assert.Equal(t, pb.RecordResponseCode_RECORD_OK, resp.Code)
 	})
 }
