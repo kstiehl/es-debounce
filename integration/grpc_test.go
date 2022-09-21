@@ -14,12 +14,12 @@ import (
 var _ = Describe("gRPC", Ordered, func() {
 	var client pb.RecordingServiceClient
 	BeforeAll(func() {
-		listener, err := net.Listen("tcp", ":8080")
+		listener, err := net.Listen("tcp", ":9090")
 		Expect(err).ToNot(HaveOccurred())
 		go server.RunServer(context.Background(), server.WithListen(listener))
 		// TODO(kstiehl): find a way to stop server
 
-		con, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+		con, err := grpc.Dial("localhost:9090", grpc.WithInsecure())
 		client = pb.NewRecordingServiceClient(con)
 	})
 
