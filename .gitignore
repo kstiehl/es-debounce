@@ -1,5 +1,3 @@
 ./debounce-indexer
 a.out
 
-# go protobuf files
-*.pb.go
