@@ -49,6 +49,7 @@ func TestServer(t *testing.T) {
 	listener, err := net.Listen("tcp", ":8080")
 	assert.NoError(t, err)
 
+	// TODO(kstiehl): find a way to stop server
 	go RunServer(ctx, WithListen(listener))
 	t.Run("RecordEvent", func(t *testing.T) {
 		con, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
