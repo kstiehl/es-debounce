@@ -5,19 +5,24 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
+	"github.com/kstiehl/index-bouncer/pkg/opensearch"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	oSearch "github.com/opensearch-project/opensearch-go"
+	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var _ = Describe("Indexer", Ordered, func() {
+var _ = Describe("opensearch", Ordered, func() {
 	var openSearchContainer testcontainers.Container
 	var openSearchIP string
 	var client *http.Client
+	var osClient *oSearch.Client
 
 	BeforeAll(func() {
 		req := testcontainers.ContainerRequest{
@@ -48,6 +53,14 @@ var _ = Describe("Indexer", Ordered, func() {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		}
+		osClient, err = oSearch.NewClient(oSearch.Config{
+			Addresses: []string{fmt.Sprintf("https://%s:9200", openSearchIP)},
+			Username:  "admin",
+			Password:  "admin",
+			Transport: client.Transport,
+		})
+
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterAll(func() {
@@ -84,5 +97,33 @@ var _ = Describe("Indexer", Ordered, func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect("bar").To(BeEquivalentTo(responseBody["foo"]))
+	})
+
+	FIt("create datastream", func() {
+		ctx := context.Background()
+
+		existsRequest := opensearchapi.IndicesExistsTemplateRequest{
+			Name: []string{"test"},
+		}
+
+		res, err := existsRequest.Do(ctx, osClient)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(res.IsError()).To(BeTrue())
+
+		err = opensearch.EnsureIndexTemplate(ctx, osClient, opensearch.DataStreamConfig{
+			Name:          "test",
+			IndexPatterns: []string{"test-*"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		existsRequest = opensearchapi.IndicesExistsTemplateRequest{
+			Name: []string{"test"},
+		}
+		res, err = existsRequest.Do(ctx, osClient)
+		body, _ := io.ReadAll(res.Body)
+		fmt.Println("status code", res.StatusCode)
+		fmt.Println(body)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(res.IsError()).To(BeFalse())
 	})
 })
