@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -63,10 +62,10 @@ var _ = Describe("opensearch", Ordered, func() {
 			Username:          "admin",
 			Password:          "admin",
 			Transport:         client.Transport,
-			EnableDebugLogger: true,
+			EnableDebugLogger: false,
 			Logger: &opensearchtransport.CurlLogger{
 				EnableRequestBody: true,
-				Output:            os.Stdout,
+				Output:            GinkgoWriter,
 			},
 		})
 
@@ -122,7 +121,7 @@ var _ = Describe("opensearch", Ordered, func() {
 
 		err = opensearch.EnsureIndexTemplate(ctx, osClient, opensearch.DataStreamConfig{
 			Name:          "test",
-			IndexPatterns: []string{"test-*"},
+			IndexPatterns: []string{"test"},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -130,9 +129,7 @@ var _ = Describe("opensearch", Ordered, func() {
 			Name: "test",
 		}
 		res, err = existsRequest.Do(ctx, osClient)
-		body, _ := io.ReadAll(res.Body)
-		fmt.Println("status code", res.StatusCode)
-		fmt.Println(body)
+		defer res.Body.Close()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res.IsError()).To(BeFalse())
 	})
