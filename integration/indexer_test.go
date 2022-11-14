@@ -108,7 +108,7 @@ var _ = Describe("opensearch", Ordered, func() {
 		Expect("bar").To(BeEquivalentTo(responseBody["foo"]))
 	})
 
-	FIt("create datastream", func() {
+	It("create datastream", func() {
 		ctx := logr.NewContext(context.Background(), stdr.New(log.New(os.Stdout, "", log.Lshortfile)))
 
 		existsRequest := opensearchapi.IndicesExistsIndexTemplateRequest{
