@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	"github.com/opensearch-project/opensearch-go/v2"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 )
 
 // DataStreamConfig holds all information in order to create a data stream.
@@ -47,14 +47,14 @@ func EnsureIndexTemplate(ctx context.Context, client *opensearch.Client, config 
 		log.Error(err, "unexpected error when marshalling index patterns slice to json")
 		return err
 	}
-
-	indexTemplate := opensearchapi.IndicesCreateRequest{
-		Index: config.Name,
-		Body: strings.NewReader(`
+	indexTemplate := opensearchapi.IndicesPutIndexTemplateRequest{
+		Body: strings.NewReader(`{
 			"index_patterns": ` + string(bJson) + `,
 			"data_stream": {},
 			"priority": 100
+		}
 		`),
+		Name: config.Name,
 	}
 
 	res, err = indexTemplate.Do(ctx, client)

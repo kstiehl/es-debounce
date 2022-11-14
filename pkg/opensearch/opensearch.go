@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/opensearch-project/opensearch-go"
+	"github.com/opensearch-project/opensearch-go/v2"
 )
 
 var ErrOptNoAddress = errors.New("no address was specified")

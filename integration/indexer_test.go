@@ -6,14 +6,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/stdr"
 	"github.com/kstiehl/index-bouncer/pkg/opensearch"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	oSearch "github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	oSearch "github.com/opensearch-project/opensearch-go/v2"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchtransport"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -54,10 +59,15 @@ var _ = Describe("opensearch", Ordered, func() {
 			},
 		}
 		osClient, err = oSearch.NewClient(oSearch.Config{
-			Addresses: []string{fmt.Sprintf("https://%s:9200", openSearchIP)},
-			Username:  "admin",
-			Password:  "admin",
-			Transport: client.Transport,
+			Addresses:         []string{fmt.Sprintf("https://%s:9200", openSearchIP)},
+			Username:          "admin",
+			Password:          "admin",
+			Transport:         client.Transport,
+			EnableDebugLogger: true,
+			Logger: &opensearchtransport.CurlLogger{
+				EnableRequestBody: true,
+				Output:            os.Stdout,
+			},
 		})
 
 		Expect(err).ToNot(HaveOccurred())
@@ -100,10 +110,10 @@ var _ = Describe("opensearch", Ordered, func() {
 	})
 
 	FIt("create datastream", func() {
-		ctx := context.Background()
+		ctx := logr.NewContext(context.Background(), stdr.New(log.New(os.Stdout, "", log.Lshortfile)))
 
-		existsRequest := opensearchapi.IndicesExistsTemplateRequest{
-			Name: []string{"test"},
+		existsRequest := opensearchapi.IndicesExistsIndexTemplateRequest{
+			Name: "test",
 		}
 
 		res, err := existsRequest.Do(ctx, osClient)
@@ -116,8 +126,8 @@ var _ = Describe("opensearch", Ordered, func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		existsRequest = opensearchapi.IndicesExistsTemplateRequest{
-			Name: []string{"test"},
+		existsRequest = opensearchapi.IndicesExistsIndexTemplateRequest{
+			Name: "test",
 		}
 		res, err = existsRequest.Do(ctx, osClient)
 		body, _ := io.ReadAll(res.Body)

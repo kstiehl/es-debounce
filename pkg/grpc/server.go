@@ -96,7 +96,7 @@ func getServerListen(options Options) (net.Listener, error) {
 func assembleRouter() *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/_/ping", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-		w.Write([]byte("pong"))
+		_, _ = w.Write([]byte("pong"))
 	})
 	return router
 }
