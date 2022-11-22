@@ -9,27 +9,23 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 )
 
-// DataStreamConfig holds all information in order to create a data stream.
-type DataStreamConfig struct {
-	// Name holds the name of the data stream.
-	Name string
-
-	// IndexPatterns holds the patterns that should be defined for the data stream
-	IndexPatterns []string
+type DataStream interface {
+	Name() string
 }
 
 // EnsureIndexTemplate makes sure that an Index Template is present and is configured in a given way.
 //
 // Note: If the configuration of an exisiting index template doesn't match the given configuration an error
 // will be returned. Currently there is no save way for us to update the index template.
-func EnsureIndexTemplate(ctx context.Context, client *opensearch.Client, config DataStreamConfig) error {
+func EnsureIndexTemplate(ctx context.Context, client Client, config DataStream) error {
 	log := logr.FromContextOrDiscard(ctx).WithName("opensearch-client")
+
+	streamName := config.Name()
 	exists := opensearchapi.IndicesExistsIndexTemplateRequest{
-		Name: config.Name,
+		Name: streamName,
 	}
 	res, err := exists.Do(ctx, client)
 	if err != nil {
@@ -42,7 +38,7 @@ func EnsureIndexTemplate(ctx context.Context, client *opensearch.Client, config 
 		return nil
 	}
 
-	bJson, err := json.Marshal(&config.IndexPatterns)
+	bJson, err := json.Marshal([]string{streamName})
 	if err != nil {
 		log.Error(err, "unexpected error when marshalling index patterns slice to json")
 		return err
@@ -54,7 +50,7 @@ func EnsureIndexTemplate(ctx context.Context, client *opensearch.Client, config 
 			"priority": 100
 		}
 		`),
-		Name: config.Name,
+		Name: streamName,
 	}
 
 	res, err = indexTemplate.Do(ctx, client)

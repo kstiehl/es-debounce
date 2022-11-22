@@ -14,7 +14,7 @@ var ErrOptNoAddress = errors.New("no address was specified")
 
 // Client is the way to communicate with a configured opensearch.
 type Client struct {
-	opensearchClient *opensearch.Client
+	*opensearch.Client
 }
 
 // NewWithDefaultClient creates a Client based on the given http.Client.
@@ -24,7 +24,7 @@ func NewWithDefaultClient() (Client, error) {
 		return Client{}, err
 	}
 	return Client{
-		opensearchClient: client,
+		client,
 	}, nil
 }
 
@@ -48,7 +48,7 @@ func (client Client) BulkIndex(ctx context.Context, docs []Document) error {
 	}
 
 	// TODO: check response
-	_, err = client.opensearchClient.Bulk(dataBytes)
+	_, err = client.Bulk(dataBytes)
 	if err != nil {
 		return fmt.Errorf("error during bulk index request to opensearch")
 	}
