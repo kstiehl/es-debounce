@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
@@ -30,12 +31,21 @@ type DataStream interface {
 	Name() string
 }
 
-type EventPayload struct{}
+type EventPayload interface{}
+
+type timestampedPayload struct {
+	EventPayload
+	TimeStamp time.Time `json:"@timestamp"`
+}
+
+func timestamp(payload EventPayload) timestampedPayload {
+	return timestampedPayload{payload, time.Now().UTC()}
+}
 
 type Event struct {
 	ID string
 
-	Payload *EventPayload
+	Payload EventPayload
 }
 
 // IndexEvent takes a given Event and tries to appned it to the current stream
@@ -49,7 +59,8 @@ func IndexEvent(ctx context.Context, client Client, stream DataStream, event Eve
 		return fmt.Errorf("failed to index document: %w", err)
 	}
 
-	payloadBytes, err := json.Marshal(event.Payload)
+	timestamped := timestamp(event.Payload)
+	payloadBytes, err := json.Marshal(timestamped)
 	if err != nil {
 		log.Info("converting payload to JSON failed")
 		return fmt.Errorf("could not marshal payload to JSON: %w", err)
@@ -57,7 +68,7 @@ func IndexEvent(ctx context.Context, client Client, stream DataStream, event Eve
 
 	payloadReader := bytes.NewReader(payloadBytes)
 
-	indexRequest := opensearchapi.IndexRequest{
+	indexRequest := opensearchapi.CreateRequest{
 		Index:      stream.Name(),
 		DocumentID: event.ID,
 		Body:       payloadReader,
