@@ -2,22 +2,20 @@ syntax = "proto3";
 
 option go_package = "pkg/grpc/pb";
 
+enum StatusCode {
+	RECORD_OK = 0;
+}
 
-message RecordEventRequest {
+message IndexResonse {
+	StatusCode code = 1; 
+}
+
+message Event {
 	string eventID = 1;
 	string objectID = 2;
 	string data = 3;
 }
 
-
-enum RecordResponseCode {
-	RECORD_OK = 0;
-}
-
-message RecordEventResponse {
-	RecordResponseCode code = 1;
-}
-
-service RecordingService {
-	rpc RecordEvent(RecordEventRequest) returns (RecordEventResponse) {}
+service StreamingService {
+	rpc Index(Event) returns (IndexResonse) {}
 }

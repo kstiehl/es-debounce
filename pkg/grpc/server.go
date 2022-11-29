@@ -60,12 +60,8 @@ func RunServer(ctx context.Context, options ...Option) error {
 
 	gServer := grpc.NewServer()
 
-	recordingService, err := newRecordService(log.WithName("RecordingService"))
-	if err != nil {
-		log.Error(err, "unable to create recording service")
-		return err
-	}
-	pb.RegisterRecordingServiceServer(gServer, &recordingService)
+	streamServie := streamingService{}
+	pb.RegisterStreamingServiceServer(gServer, streamServie)
 
 	listen, err := getServerListen(serverOptions)
 	if err != nil {
