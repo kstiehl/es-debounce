@@ -4,13 +4,15 @@ import (
 	context "context"
 
 	"github.com/go-logr/logr"
+	"github.com/kstiehl/index-bouncer/api"
+	"github.com/kstiehl/index-bouncer/grpc/types"
 )
 
 type Server struct {
-	UnimplementedStreamingServiceServer
+	types.UnimplementedStreamingServiceServer
 }
 
-func (Server) Index(ctx context.Context, event *Event) (_ *IndexResonse, _ error) {
+func (Server) Index(ctx context.Context, event *types.Event) (*types.IndexResonse, error) {
 	log := logr.FromContextOrDiscard(ctx).V(1).WithName("Indexer")
 	if event == nil {
 		log.Info("empty event received. Check client implementation")
@@ -21,7 +23,8 @@ func (Server) Index(ctx context.Context, event *Event) (_ *IndexResonse, _ error
 		"objectID", event.ObjectID)
 	ctx = logr.NewContext(ctx, log)
 
-	return &IndexResonse{Code: StatusCode_RECORD_OK}, nil
+	api.Index(ctx, nil, event)
+	return &types.IndexResonse{Code: types.StatusCode_RECORD_OK}, nil
 }
 
 func (Server) mustEmbedUnimplementedStreamingServiceServer() {

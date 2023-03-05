@@ -1,22 +1,37 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/go-logr/logr"
-	"github.com/kstiehl/index-bouncer/grpc"
+	"github.com/kstiehl/index-bouncer/grpc/types"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 )
 
+const (
+	// TargetIndexName holds the name to which all events are currently written.
+	// This is hardcoded for now.
+	TargetIndexName = "eventingest"
+)
+
 // Prepare should prepare the underlying storage system in order that this stream can be used.
-func Prepare(ctx context.Context, client *opensearch.Client, event *grpc.Event) error {
+func Index(ctx context.Context, client *opensearch.Client, event *types.Event) error {
 	log := logr.FromContextOrDiscard(ctx).WithName("API")
+
+	reader, err := serializeEvent(event)
+	if err != nil {
+		return err
+	}
+
 	indexRequest := opensearchapi.CreateRequest{
 		Index:      "eventingest",
 		DocumentID: event.EventID,
+		Body:       reader,
 	}
 
 	response, err := indexRequest.Do(ctx, client)
@@ -39,6 +54,37 @@ func Prepare(ctx context.Context, client *opensearch.Client, event *grpc.Event) 
 	}
 
 	return nil
+}
+
+// serializeEvent should convert an Event to JSON.
+// Since this function will invoked quite alot it won't hurt
+// to pay attention to memory consumption and performance
+func serializeEvent(event *types.Event) (io.Reader, error) {
+	buffer := bytes.NewBuffer(make([]byte, 0, 1024)) // could be a place for sync.Pool{} but needs more benchmarks
+	buffer.WriteString("{\"eventID\": \"")           // 13
+	buffer.WriteString(event.EventID)
+	buffer.WriteString("\", \"objectID\": \"") // 15
+	buffer.WriteString(event.ObjectID)
+	buffer.WriteString("\", \"data\": [") // 2
+	for i, value := range event.Data {
+		if i != 0 && i != len(event.Data)-1 {
+			buffer.WriteRune(',')
+		}
+
+		valueBytes, err := json.Marshal(value.Value)
+		if err != nil {
+			return nil, fmt.Errorf("unable to serialize event: %w", err)
+		}
+
+		buffer.WriteString("\"")
+		buffer.WriteString(value.Key)
+		buffer.WriteString("\":, ")
+		buffer.Write(valueBytes)
+
+	}
+
+	buffer.WriteString("]}")
+	return buffer, nil
 }
 
 // logClose is a little helper to check the error when closing a response.

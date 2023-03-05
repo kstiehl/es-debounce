@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "grpc/";
+option go_package = "grpc/types";
 
 enum StatusCode {
 	RECORD_OK = 0;
@@ -10,10 +10,25 @@ message IndexResonse {
 	StatusCode code = 1; 
 }
 
+message EventData {
+	string key = 1;
+	EventDataValue value = 2;
+}
+
+message EventDataValue {
+	oneof test_event_data {
+		string stringValue = 1;
+		bool boolValue = 2;
+		sint64 sint64 = 3;
+	}
+
+}
+
 message Event {
 	string eventID = 1;
 	string objectID = 2;
-	string data = 3;
+	repeated EventData data = 3;
+	
 }
 
 service StreamingService {
