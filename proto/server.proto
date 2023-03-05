@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "pkg/grpc/pb";
+option go_package = "grpc/";
 
 enum StatusCode {
 	RECORD_OK = 0;
