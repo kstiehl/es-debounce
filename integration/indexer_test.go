@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/stdr"
-	"github.com/kstiehl/index-bouncer/api"
 	"github.com/kstiehl/index-bouncer/integration/helper"
 	"github.com/kstiehl/index-bouncer/pkg/opensearch"
 	. "github.com/onsi/ginkgo/v2"
@@ -54,31 +53,5 @@ var _ = Describe("opensearch", Ordered, func() {
 		defer res.Body.Close()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res.IsError()).To(BeFalse())
-	})
-
-	It("prepare stream", func() {
-		streamAPI := api.NewAPI(opensearch.Client{osClient})
-		stream := helper.TestStream{StreamName: "dog"}
-		err := streamAPI.Prepare(context.Background(), stream)
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	FIt("index document", func() {
-		streamAPI := api.NewAPI(opensearch.Client{osClient})
-		stream := helper.TestStream{StreamName: "cat"}
-		ctx := logr.NewContext(context.Background(), stdr.New(log.New(GinkgoWriter, "", log.Lshortfile)))
-
-		By("making sure index is created")
-		err := streamAPI.Prepare(ctx, stream)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("Indexing an Event")
-		err = streamAPI.Index(ctx, stream, api.Event{
-			ID: "Test",
-			Payload: map[string]interface{}{
-				"hi": "test",
-			},
-		})
-		Expect(err).ToNot(HaveOccurred())
 	})
 })
