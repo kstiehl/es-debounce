@@ -3,39 +3,61 @@ package api
 import (
 	"context"
 	"fmt"
+	"io"
 
-	"github.com/kstiehl/index-bouncer/pkg/opensearch"
+	"github.com/go-logr/logr"
+	"github.com/kstiehl/index-bouncer/grpc"
+	"github.com/opensearch-project/opensearch-go/v2"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 )
-
-type (
-	Stream = opensearch.DataStream
-	Client = opensearch.Client
-	Event  = opensearch.Event
-)
-
-type API struct {
-	client Client
-}
-
-// NewAPI returns an API object with the given configuration
-func NewAPI(client Client) API {
-	return API{client}
-}
 
 // Prepare should prepare the underlying storage system in order that this stream can be used.
-func (api API) Prepare(ctx context.Context, stream Stream) error {
-	err := opensearch.EnsureIndexTemplate(ctx, api.client, stream)
-	if err != nil {
-		return fmt.Errorf("error when ensuring index template: %w", err)
+func Prepare(ctx context.Context, client *opensearch.Client, event *grpc.Event) error {
+	log := logr.FromContextOrDiscard(ctx).WithName("API")
+	indexRequest := opensearchapi.CreateRequest{
+		Index:      "eventingest",
+		DocumentID: event.EventID,
 	}
+
+	response, err := indexRequest.Do(ctx, client)
+	if err != nil {
+		return err
+	}
+
+	logClose(log, response.Body)
+
+	if response.IsError() {
+
+		analyzeBody(log, response)
+		log.Info("unexpected response status code from opensearch",
+			"statusCode", response.StatusCode)
+
+		// error message from opensearch should never be leaked to client
+		// note: maybe it makes sense to include EventID in the future.
+		// Could be helpful when debugging.
+		err = fmt.Errorf("Failed to index event")
+	}
+
 	return nil
 }
 
-// Index takes an Event an appends it to the stream
-func (api API) Index(ctx context.Context, stream Stream, event Event) error {
-	err := opensearch.IndexEvent(ctx, api.client, stream, event)
+// logClose is a little helper to check the error when closing a response.
+func logClose(log logr.Logger, closer io.Closer) {
+	err := closer.Close()
 	if err != nil {
-		return NewAPIError(err, "unable to index event")
+		log.Error(err, "error when closing response")
 	}
-	return nil
+}
+
+// analyzeBody dumps the reponse body to the log.
+// sometimes opensearch replies with helpful error messages which can be useful when debugging.
+func analyzeBody(log logr.Logger, response *opensearchapi.Response) {
+	if response.IsError() {
+		bodyBytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			log.Error(err, "failed reading opensearch response")
+		}
+		fields := append([]string{"payload", string(bodyBytes)})
+		log.Info("elastic error resposne dump", "payload", fields)
+	}
 }
