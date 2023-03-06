@@ -67,7 +67,7 @@ func serializeEvent(event *types.Event) (io.Reader, error) {
 	buffer.WriteString(event.ObjectID)
 	buffer.WriteString("\", \"data\": [") // 2
 	for i, value := range event.Data {
-		if i != 0 && i != len(event.Data)-1 {
+		if i != 0 {
 			buffer.WriteRune(',')
 		}
 
