@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -50,7 +51,7 @@ func Index(ctx context.Context, client *opensearch.Client, event *types.Event) e
 		// error message from opensearch should never be leaked to client
 		// note: maybe it makes sense to include EventID in the future.
 		// Could be helpful when debugging.
-		err = fmt.Errorf("Failed to index event")
+		return errors.New("Failed to index event")
 	}
 
 	return nil
@@ -103,7 +104,7 @@ func analyzeBody(log logr.Logger, response *opensearchapi.Response) {
 		if err != nil {
 			log.Error(err, "failed reading opensearch response")
 		}
-		fields := append([]string{"payload", string(bodyBytes)})
+		fields := append([]string{"payload"}, string(bodyBytes))
 		log.Info("elastic error resposne dump", "payload", fields)
 	}
 }
