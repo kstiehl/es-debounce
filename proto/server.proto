@@ -12,15 +12,14 @@ message IndexResonse {
 
 message EventData {
 	string key = 1;
-	EventDataValue value = 2;
+	oneof value {
+		string stringValue = 2;
+		bool boolValue = 3;
+		sint64 numberValue = 4;
+	}
 }
 
 message EventDataValue {
-	oneof test_event_data {
-		string stringValue = 1;
-		bool boolValue = 2;
-		sint64 sint64 = 3;
-	}
 
 }
 
